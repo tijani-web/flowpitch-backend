@@ -1,0 +1,320 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id            String   @id @default(cuid())
+  name          String?
+  username      String?  @unique
+  email         String   @unique
+  password_hash String?
+  google_id     String?  @unique
+  github_id     String?  @unique
+  avatar_url    String?
+  bio           String?
+  role          UserRole @default(user)
+  
+  owned_projects Projects[] @relation("ProjectOwner")
+  memberships    ProjectMembers[]
+  features       Features[]
+  votes          Votes[]
+  comments       Comments[]
+  followers      Followers[]
+  notifications  Notifications[]
+  activity_logs  ActivityLogs[]
+  sent_invites   ProjectInvites[] @relation("Inviter")  
+  
+  discussions     Discussions[]
+  discussionLikes DiscussionLikes[]
+  discussionReplies  DiscussionReplies[]
+  discussionReplyLikes DiscussionReplyLikes[]
+  
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  user
+  admin
+  superadmin
+}
+
+model Projects {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  category     String?
+  logo_url     String?
+  visibility   Visibility @default(public)
+  slug         String   @unique
+  progress     Int      @default(0) 
+  
+  owner_id     String
+  owner        Users    @relation("ProjectOwner", fields: [owner_id], references: [id])
+  
+  members      ProjectMembers[]
+  features     Features[]
+  followers    Followers[]
+  stages       RoadmapStages[]
+  activity_logs ActivityLogs[]
+  invites      ProjectInvites[]  
+  
+  discussions Discussions[]
+
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Visibility {
+  public
+  private
+}
+
+model RoadmapStages {
+  id          String   @id @default(cuid())
+  title       String
+  position    Int
+  color       String?  @default("bg-gray-500") 
+  project_id  String
+  project     Projects @relation(fields: [project_id], references: [id])
+  features    Features[]
+  
+  createdAt DateTime @default(now())
+}
+
+model Features {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  tags        String[]
+  status      FeatureStatus @default(open)
+  priority    Priority @default(medium)
+  vote_count  Int      @default(0)
+  progress    Int      @default(0) 
+  start_date  DateTime? 
+  target_date DateTime? 
+  
+  project_id  String
+  project     Projects @relation(fields: [project_id], references: [id])
+  
+  stage_id    String?
+  stage       RoadmapStages? @relation(fields: [stage_id], references: [id])
+  
+  author_id   String
+  author      Users @relation(fields: [author_id], references: [id])
+  
+  votes       Votes[]
+  comments    Comments[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum FeatureStatus {
+  open
+  under_review
+  in_progress
+  completed
+  rejected
+}
+
+enum Priority {
+  low
+  medium
+  high
+}
+
+model Votes {
+  id         String   @id @default(cuid())
+  value      Int      
+  user_id    String
+  feature_id String
+  user       Users    @relation(fields: [user_id], references: [id])
+  feature    Features @relation(fields: [feature_id], references: [id])
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([user_id, feature_id])
+}
+
+model Comments {
+  id         String   @id @default(cuid())
+  content    String
+  parent_id  String?
+  author_id  String
+  feature_id String
+  author     Users    @relation(fields: [author_id], references: [id])
+  feature    Features @relation(fields: [feature_id], references: [id])
+  parent     Comments? @relation("CommentReplies", fields: [parent_id], references: [id])
+  replies    Comments[] @relation("CommentReplies")
+  
+  createdAt DateTime @default(now())
+}
+
+model ProjectMembers {
+  id         String   @id @default(cuid())
+  role       ProjectRole @default(viewer)
+  user_id    String
+  project_id String
+  user       Users    @relation(fields: [user_id], references: [id])
+  project    Projects @relation(fields: [project_id], references: [id])
+  
+  joinedAt DateTime @default(now())
+  
+  @@unique([user_id, project_id])
+}
+
+enum ProjectRole {
+  owner
+  admin
+  editor
+  member
+  viewer
+}
+
+model Followers {
+  id         String   @id @default(cuid())
+  user_id    String
+  project_id String
+  user       Users    @relation(fields: [user_id], references: [id])
+  project    Projects @relation(fields: [project_id], references: [id])
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([user_id, project_id])
+}
+
+model Notifications {
+  id           String   @id @default(cuid())
+  type         NotificationType
+  user_id      String
+  reference_id String?
+  message      String?
+  read         Boolean  @default(false)
+  user         Users    @relation(fields: [user_id], references: [id])
+  
+  createdAt DateTime @default(now())
+}
+
+enum NotificationType {
+  comment
+  status_update
+  new_feature
+  vote
+  mention
+}
+
+model ActivityLogs {
+  id         String   @id @default(cuid())
+  action     String
+  metadata   Json?
+  user_id    String
+  project_id String?
+  user       Users    @relation(fields: [user_id], references: [id])
+  project    Projects? @relation(fields: [project_id], references: [id])
+  
+  createdAt DateTime @default(now())
+}
+
+model ProjectInvites {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  email      String
+  role       ProjectRole @default(viewer)
+  accepted   Boolean  @default(false)
+  expires_at DateTime
+  
+  project_id String
+  project    Projects @relation(fields: [project_id], references: [id])
+  
+  invited_by String
+  inviter    Users @relation("Inviter", fields: [invited_by], references: [id])
+  
+  accepted_at DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([token])
+  @@index([email])
+}
+
+model Discussions {
+  id        String   @id @default(cuid())
+  content   String
+  author_id String
+  project_id String
+  
+  author    Users    @relation(fields: [author_id], references: [id], onDelete: Cascade)
+  project   Projects @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  
+  likes     DiscussionLikes[]
+  replies DiscussionReplies[]
+  
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("discussions")
+}
+
+model DiscussionReplies {
+  id            String   @id @default(cuid())
+  content       String
+  author_id     String
+  discussion_id String
+  parent_id     String? 
+  
+  author        Users      @relation(fields: [author_id], references: [id], onDelete: Cascade)
+  discussion    Discussions @relation(fields: [discussion_id], references: [id], onDelete: Cascade)
+  parent        DiscussionReplies? @relation("DiscussionReplyReplies", fields: [parent_id], references: [id])
+  replies       DiscussionReplies[] @relation("DiscussionReplyReplies")
+
+  likes     DiscussionReplyLikes[]
+
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("discussion_replies")
+}
+
+model DiscussionReplyLikes {
+  id            String   @id @default(cuid())
+  user_id       String
+  reply_id      String
+  
+  user       Users           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  reply      DiscussionReplies @relation(fields: [reply_id], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+
+  @@unique([user_id, reply_id])
+  @@map("discussion_reply_likes")
+}
+
+model DiscussionLikes {
+  id            String   @id @default(cuid())
+  user_id       String
+  discussion_id String
+  
+ 
+  user       Users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  discussion Discussions @relation(fields: [discussion_id], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+
+  @@unique([user_id, discussion_id])
+  @@map("discussion_likes")
+}
+
