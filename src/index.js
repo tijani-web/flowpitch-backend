@@ -11,6 +11,7 @@ import errorHandler from './middleware/error.js'
 // github/google passport oauth import.
 import passport from './passportSetup.js'
 import cors from 'cors'
+import helmet from 'helmet'
 
 // routes imports.
 import userRoutes from './routes/userRoutes.js'
