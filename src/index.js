@@ -45,9 +45,9 @@ app.use(express.urlencoded({ extended: true }));
 
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: ['http://localhost:3000', 'https://flowpitch.vercel.app'],
   credentials: true
-}))
+}));
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use(logger)
