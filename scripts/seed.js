@@ -1,10 +1,26 @@
-// seed.js - PRODUCTION-READY REALISTIC DATA
-import { PrismaClient } from '@prisma/client';
+// scripts/seed.js
+import { config } from 'dotenv';
+import prisma from '../lib/prisma.js'; 
 import bcrypt from 'bcryptjs';
-import dotenv from 'dotenv'
 
-dotenv.config()
-const prisma = new PrismaClient();
+// Load environment variables
+config();
+
+// Add connection test function
+async function waitForDatabase() {
+  console.log('⏳ Waiting for database to wake up (Render free tier)...');
+  for (let i = 0; i < 30; i++) { // Try for 30 seconds
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      console.log('✅ Database is awake!');
+      return true;
+    } catch {
+      console.log(`Still waiting... (${i+1}/30)`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  throw new Error('Database never woke up');
+}
 
 const industries = [
   'SaaS', 'FinTech', 'HealthTech', 'EdTech', 'AI/ML', 'E-commerce', 
@@ -287,20 +303,21 @@ const realisticComments = [
 
 async function main() {
   console.log('🌱 Starting production-grade seed...');
+   await waitForDatabase();
 
   // Clear existing data
-  console.log('🗑️ Clearing existing data...');
-  await prisma.votes.deleteMany();
-  await prisma.comments.deleteMany();
-  await prisma.features.deleteMany();
-  await prisma.roadmapStages.deleteMany();
-  await prisma.followers.deleteMany();
-  await prisma.projectMembers.deleteMany();
-  await prisma.projectInvites.deleteMany();
-  await prisma.activityLogs.deleteMany();
-  await prisma.notifications.deleteMany();
-  await prisma.projects.deleteMany();
-  await prisma.users.deleteMany();
+  // console.log('🗑️ Clearing existing data...');
+  // await prisma.votes.deleteMany();
+  // await prisma.comments.deleteMany();
+  // await prisma.features.deleteMany();
+  // await prisma.roadmapStages.deleteMany();
+  // await prisma.followers.deleteMany();
+  // await prisma.projectMembers.deleteMany();
+  // await prisma.projectInvites.deleteMany();
+  // await prisma.activityLogs.deleteMany();
+  // await prisma.notifications.deleteMany();
+  // await prisma.projects.deleteMany();
+  // await prisma.users.deleteMany();
 
   // Create users
   console.log('👥 Creating realistic users...');

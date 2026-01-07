@@ -111,13 +111,11 @@ export const forgotPassword = async (req, res, next) => {
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
     // In production, store this in database and send email
-    // For now, we'll just return the token
-    console.log('Reset token for development:', resetToken);
+    // console.log('Reset token for development:', resetToken);
 
     res.json({
       success: true,
       message: 'If email exists, reset instructions sent',
-      // Remove this in production - only for development
       resetToken 
     });
 
@@ -132,7 +130,6 @@ export const resetPassword = async (req, res, next) => {
     const { token, password } = req.body;
 
     // In production: Verify token from database
-    // For now, we'll simulate token verification
     if (!token) {
       const error = new Error('Invalid or expired reset token');
       error.status = 400;
