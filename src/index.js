@@ -43,11 +43,12 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
+app.use(helmet());
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://flowpitch.vercel.app'],
+  origin: process.env.FRONTEND_URL,
   credentials: true
 }));
+
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use(logger)
@@ -61,9 +62,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/oauth', oauthRoutes);
 app.use('/api/users', userRoutes); 
 
-app.use('/api', voteRoutes);          // ← FIRST
-app.use('/api', commentRoutes);    // ← SECOND
-app.use('/api', featureRoutes);    // ← THIRD
+app.use('/api', voteRoutes);         
+app.use('/api', commentRoutes);    
+app.use('/api', featureRoutes);    
 app.use('/api/projects', projectMemberRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/discussions', discussionRepliesRoutes);
