@@ -28,8 +28,7 @@ router.get('/google/callback',
     try {
       const token = generateToken(req.user);
       
-      // Redirect to frontend homepage (port 3000) with token
-      res.redirect(`http://localhost:3000/oauth-success?token=${token}`);
+      res.redirect(`${process.env.FRONTEND_URL}/oauth-success?token=${token}`);
     } catch (error) {
       console.error('Google callback error:', error);
       res.redirect('/api/oauth/failure');
@@ -53,7 +52,7 @@ router.get('/github/callback',
       const token = generateToken(req.user);
       
       // Redirect to frontend homepage (port 3000) with token
-      res.redirect(`http://localhost:3000/oauth-success?token=${token}`)
+      res.redirect(`${process.env.FRONTEND_URL}/oauth-success?token=${token}`)
     } catch (error) {
       console.error('GitHub callback error:', error);
       res.redirect('/api/oauth/failure');

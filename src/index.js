@@ -57,7 +57,6 @@ app.use(passport.initialize());
 
 
 // Routes
-// Routes - REORDER to avoid conflicts
 app.use('/api/auth', authRoutes);
 app.use('/api/oauth', oauthRoutes);
 app.use('/api/users', userRoutes); 
